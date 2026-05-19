@@ -260,6 +260,11 @@ async function suggestTaskBreakdownWithAI() {
         
         if (subTasks.length > 0) {
             todoInput.value = '';
+            
+            // 상위 목표(최종) 추가
+            await addTodoInternal(`[최종] ${taskText}`);
+            
+            // 하위 할 일 추가
             for (const subTask of subTasks) {
                 await addTodoInternal(subTask);
             }
