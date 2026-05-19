@@ -2,14 +2,15 @@
 
 // State
 let currentDate = new Date();
+let currentCalendarDate = new Date();
 let todos = [];
 let supabaseClient = null;
 
 // DOM Elements
-const prevDateBtn = document.getElementById('prev-date-btn');
-const nextDateBtn = document.getElementById('next-date-btn');
-const currentDateDisplay = document.getElementById('current-date-display');
-const currentDateFull = document.getElementById('current-date-full');
+const prevMonthBtn = document.getElementById('prev-month-btn');
+const nextMonthBtn = document.getElementById('next-month-btn');
+const calendarMonthDisplay = document.getElementById('calendar-month-display');
+const calendarGrid = document.getElementById('calendar-grid');
 const todoForm = document.getElementById('add-todo-form');
 const todoInput = document.getElementById('todo-input');
 const todoList = document.getElementById('todo-list');
@@ -27,7 +28,7 @@ const aiSuggestBtn = document.getElementById('ai-suggest-btn');
 function init() {
     initSupabase();
     setupEventListeners();
-    updateDateDisplay();
+    renderCalendar();
     fetchTodos();
 }
 
@@ -46,8 +47,8 @@ function initSupabase() {
 
 // Event Listeners
 function setupEventListeners() {
-    prevDateBtn.addEventListener('click', () => changeDate(-1));
-    nextDateBtn.addEventListener('click', () => changeDate(1));
+    prevMonthBtn.addEventListener('click', () => changeMonth(-1));
+    nextMonthBtn.addEventListener('click', () => changeMonth(1));
     todoForm.addEventListener('submit', handleAddTodo);
     aiSuggestBtn.addEventListener('click', suggestTaskBreakdownWithAI);
 
@@ -90,48 +91,52 @@ function setupEventListeners() {
 }
 
 // Date Handling
-function changeDate(days) {
-    currentDate.setDate(currentDate.getDate() + days);
-    updateDateDisplay();
-    fetchTodos();
+function changeMonth(delta) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+    renderCalendar();
 }
 
-function updateDateDisplay() {
+function renderCalendar() {
+    if (!calendarGrid) return;
+    calendarGrid.innerHTML = '';
+    
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    
+    const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+    calendarMonthDisplay.textContent = `${year}년 ${monthNames[month]}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
-    const isToday = 
-        currentDate.getDate() === today.getDate() &&
-        currentDate.getMonth() === today.getMonth() &&
-        currentDate.getFullYear() === today.getFullYear();
-
-    const isYesterday = new Date(today);
-    isYesterday.setDate(today.getDate() - 1);
-    const isYesterdayMatch = 
-        currentDate.getDate() === isYesterday.getDate() &&
-        currentDate.getMonth() === isYesterday.getMonth() &&
-        currentDate.getFullYear() === isYesterday.getFullYear();
-
-    const isTomorrow = new Date(today);
-    isTomorrow.setDate(today.getDate() + 1);
-    const isTomorrowMatch = 
-        currentDate.getDate() === isTomorrow.getDate() &&
-        currentDate.getMonth() === isTomorrow.getMonth() &&
-        currentDate.getFullYear() === isTomorrow.getFullYear();
-
-    if (isToday) {
-        currentDateDisplay.textContent = "Today";
-    } else if (isYesterdayMatch) {
-        currentDateDisplay.textContent = "Yesterday";
-    } else if (isTomorrowMatch) {
-        currentDateDisplay.textContent = "Tomorrow";
-    } else {
-        currentDateDisplay.textContent = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.classList.add('calendar-day', 'empty');
+        calendarGrid.appendChild(emptyCell);
     }
 
-    currentDateFull.textContent = currentDate.toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-    });
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayCell = document.createElement('div');
+        dayCell.classList.add('calendar-day');
+        dayCell.textContent = i;
+        
+        if (year === currentDate.getFullYear() && month === currentDate.getMonth() && i === currentDate.getDate()) {
+            dayCell.classList.add('active');
+        }
+        
+        if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
+            dayCell.classList.add('today');
+        }
+
+        dayCell.addEventListener('click', () => {
+            currentDate = new Date(year, month, i);
+            renderCalendar(); 
+            fetchTodos();
+        });
+
+        calendarGrid.appendChild(dayCell);
+    }
 }
 
 function getFormattedDateString() {
@@ -242,7 +247,7 @@ async function suggestTaskBreakdownWithAI() {
                 model: 'llama-3.1-8b-instant',
                 messages: [{
                     role: 'user',
-                    content: `사용자가 '${taskText}' 라는 할 일을 하려고 합니다. 이것을 실행하기 위한 구체적이고 순차적인 하위 할 일 3~5가지를 제안해주세요. (예를 들어 '샤워하기'라면 '옷 벗기, 물 온도 맞추기, 샴푸하기, 바디워시 하기'). 부가적인 설명(인사말 등)이나 번호 매기기 없이, 오직 하위 할 일들만 쉼표(,)로 구분해서 한국어로 출력하세요.`
+                    content: `사용자가 '${taskText}' 라는 목표를 달성하려고 합니다. 이 목표를 달성하기 위해 당장 실행할 수 있는 매우 현실적이고, 구체적이며, 실질적인 하위 액션 플랜 3~5가지를 제안해주세요. (예: '100억 벌기' -> '수입/지출 내역 분석하기, 부업을 위한 스킬셋 정리하기, 매달 50만원 저축 자동이체 설정하기'). 모호한 말은 빼고, 행동 중심적인 하위 할 일만 쉼표(,)로 구분해서 한국어로 출력하세요.`
                 }],
                 temperature: 0.7,
                 max_tokens: 150

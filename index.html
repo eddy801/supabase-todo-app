@@ -15,19 +15,30 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header: Date Selector -->
-        <header class="date-selector">
-            <button id="prev-date-btn" class="icon-btn" aria-label="Previous Day">
-                <i class='bx bx-chevron-left'></i>
-            </button>
-            <div class="date-display">
-                <h1 id="current-date-display">Today</h1>
-                <span id="current-date-full">October 24, 2023</span>
+        <!-- Calendar Container -->
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button id="prev-month-btn" class="icon-btn" aria-label="Previous Month">
+                    <i class='bx bx-chevron-left'></i>
+                </button>
+                <h2 id="calendar-month-display">October 2023</h2>
+                <button id="next-month-btn" class="icon-btn" aria-label="Next Month">
+                    <i class='bx bx-chevron-right'></i>
+                </button>
             </div>
-            <button id="next-date-btn" class="icon-btn" aria-label="Next Day">
-                <i class='bx bx-chevron-right'></i>
-            </button>
-        </header>
+            <div class="calendar-weekdays">
+                <span>Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+            </div>
+            <div id="calendar-grid" class="calendar-grid">
+                <!-- Days will be injected here via JS -->
+            </div>
+        </div>
 
         <!-- Main Content -->
         <main>
