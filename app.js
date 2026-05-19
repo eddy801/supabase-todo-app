@@ -20,6 +20,8 @@ const closeModalBtn = document.getElementById('close-modal-btn');
 const saveConfigBtn = document.getElementById('save-config-btn');
 const urlInput = document.getElementById('supabase-url');
 const keyInput = document.getElementById('supabase-key');
+const groqKeyInput = document.getElementById('groq-key');
+const aiSuggestBtn = document.getElementById('ai-suggest-btn');
 
 // Initialize
 function init() {
@@ -47,11 +49,13 @@ function setupEventListeners() {
     prevDateBtn.addEventListener('click', () => changeDate(-1));
     nextDateBtn.addEventListener('click', () => changeDate(1));
     todoForm.addEventListener('submit', handleAddTodo);
+    aiSuggestBtn.addEventListener('click', suggestTaskBreakdownWithAI);
 
     // Modal
     openConfigBtn.addEventListener('click', () => {
         urlInput.value = localStorage.getItem('supabase_url') || '';
         keyInput.value = localStorage.getItem('supabase_key') || '';
+        groqKeyInput.value = localStorage.getItem('groq_key') || '';
         configModal.classList.add('active');
     });
 
@@ -62,6 +66,8 @@ function setupEventListeners() {
     saveConfigBtn.addEventListener('click', () => {
         const url = urlInput.value.trim();
         const key = keyInput.value.trim();
+        const groqKey = groqKeyInput.value.trim();
+
         if (url && key) {
             localStorage.setItem('supabase_url', url);
             localStorage.setItem('supabase_key', key);
@@ -71,6 +77,13 @@ function setupEventListeners() {
             localStorage.removeItem('supabase_key');
             supabaseClient = null;
         }
+
+        if (groqKey) {
+            localStorage.setItem('groq_key', groqKey);
+        } else {
+            localStorage.removeItem('groq_key');
+        }
+
         configModal.classList.remove('active');
         fetchTodos(); // Refetch with new config
     });
@@ -164,6 +177,10 @@ async function handleAddTodo(e) {
     if (!task) return;
 
     todoInput.value = ''; // clear early
+    await addTodoInternal(task);
+}
+
+async function addTodoInternal(task) {
     const dateStr = getFormattedDateString();
 
     const newTodo = {
@@ -194,6 +211,66 @@ async function handleAddTodo(e) {
         }
     } else {
         saveLocalTodos(dateStr);
+    }
+}
+
+// Groq AI Integration
+async function suggestTaskBreakdownWithAI() {
+    const taskText = todoInput.value.trim();
+    if (!taskText) {
+        alert("먼저 입력창에 할 일을 적은 뒤 마법봉 버튼을 눌러주세요! (예: 자전거 타기)");
+        return;
+    }
+
+    const groqKey = localStorage.getItem('groq_key');
+    if (!groqKey) {
+        alert("AI 기능을 사용하려면 우측 하단 ⚙️ 설정에서 Groq API Key를 먼저 입력해주세요.");
+        configModal.classList.add('active');
+        return;
+    }
+
+    aiSuggestBtn.classList.add('loading');
+    
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${groqKey}`
+            },
+            body: JSON.stringify({
+                model: 'llama3-8b-8192',
+                messages: [{
+                    role: 'user',
+                    content: `사용자가 '${taskText}' 라는 할 일을 하려고 합니다. 이것을 실행하기 위한 구체적이고 순차적인 하위 할 일 3~5가지를 제안해주세요. (예를 들어 '샤워하기'라면 '옷 벗기, 물 온도 맞추기, 샴푸하기, 바디워시 하기'). 부가적인 설명(인사말 등)이나 번호 매기기 없이, 오직 하위 할 일들만 쉼표(,)로 구분해서 한국어로 출력하세요.`
+                }],
+                temperature: 0.7,
+                max_tokens: 150
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API 오류: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const suggestionStr = data.choices[0].message.content.trim();
+        
+        const subTasks = suggestionStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        
+        if (subTasks.length > 0) {
+            todoInput.value = '';
+            for (const subTask of subTasks) {
+                await addTodoInternal(subTask);
+            }
+        } else {
+            alert("AI가 적절한 하위 할 일을 만들지 못했습니다. 다시 시도해주세요.");
+        }
+    } catch (error) {
+        console.error("AI 에러:", error);
+        alert("AI 요청 중 문제가 발생했습니다. API Key를 확인해주세요.");
+    } finally {
+        aiSuggestBtn.classList.remove('loading');
     }
 }
 
