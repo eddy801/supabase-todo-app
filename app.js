@@ -239,7 +239,7 @@ async function suggestTaskBreakdownWithAI() {
                 'Authorization': `Bearer ${groqKey}`
             },
             body: JSON.stringify({
-                model: 'llama3-8b-8192',
+                model: 'llama-3.1-8b-instant',
                 messages: [{
                     role: 'user',
                     content: `사용자가 '${taskText}' 라는 할 일을 하려고 합니다. 이것을 실행하기 위한 구체적이고 순차적인 하위 할 일 3~5가지를 제안해주세요. (예를 들어 '샤워하기'라면 '옷 벗기, 물 온도 맞추기, 샴푸하기, 바디워시 하기'). 부가적인 설명(인사말 등)이나 번호 매기기 없이, 오직 하위 할 일들만 쉼표(,)로 구분해서 한국어로 출력하세요.`
