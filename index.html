@@ -3,100 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Tasks</title>
-    <meta name="description" content="A beautiful date-based to-do list application powered by Supabase.">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Boxicons for icons -->
+    <title>AETHER Dashboard</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Calendar Container -->
-        <div class="calendar-container">
-            <div class="calendar-header">
-                <button id="prev-month-btn" class="icon-btn" aria-label="Previous Month">
-                    <i class='bx bx-chevron-left'></i>
-                </button>
-                <h2 id="calendar-month-display">October 2023</h2>
-                <button id="next-month-btn" class="icon-btn" aria-label="Next Month">
-                    <i class='bx bx-chevron-right'></i>
-                </button>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class='bx bxl-sketch'></i>
+                <span>AETHER</span>
             </div>
-            <div class="calendar-weekdays">
-                <span>Sun</span>
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">
+                    <i class='bx bx-grid-alt'></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class='bx bx-time-five'></i>
+                    <span>Tasks</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class='bx bx-calendar'></i>
+                    <span>Calendar</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class='bx bx-user'></i>
+                    <span>Profile</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <img src="https://ui-avatars.com/api/?name=Sarah+J&background=random" alt="User Avatar">
+                </div>
+                <div class="user-info">
+                    <span class="user-name">Sarah J.</span>
+                    <span class="user-role">Premium User</span>
+                </div>
             </div>
-            <div id="calendar-grid" class="calendar-grid">
-                <!-- Days will be injected here via JS -->
-            </div>
-        </div>
+        </aside>
 
         <!-- Main Content -->
-        <main>
-            <!-- Add Todo Form -->
-            <form id="add-todo-form" class="add-todo-form">
-                <input type="text" id="todo-input" placeholder="What needs to be done?" required autocomplete="off">
-                <button type="button" id="ai-suggest-btn" class="ai-btn" aria-label="AI Suggestion" title="Get AI Suggestion">
-                    <i class='bx bx-magic-wand'></i>
-                </button>
-                <button type="submit" class="primary-btn">
-                    <i class='bx bx-plus'></i>
-                </button>
-            </form>
-
-            <!-- Todo List -->
-            <div class="todo-list-container">
-                <ul id="todo-list" class="todo-list">
-                    <!-- Todos will be injected here via JS -->
-                    <div class="empty-state">
-                        <i class='bx bx-list-check'></i>
-                        <p>No tasks for this day. Enjoy your free time!</p>
+        <main class="main-content">
+            <header class="top-nav">
+                <h1>Tasks & Focus</h1>
+                <div class="top-actions">
+                    <div class="search-box">
+                        <i class='bx bx-search'></i>
+                        <input type="text" placeholder="Search">
                     </div>
-                </ul>
+                    <button class="icon-btn header-btn"><i class='bx bx-bell'></i></button>
+                </div>
+            </header>
+
+            <div class="content-scroll">
+                <!-- Calendar Card -->
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <h2 id="calendar-month-display">JUNE 2024</h2>
+                        <div class="calendar-nav">
+                            <button id="prev-month-btn" class="icon-btn sm"><i class='bx bx-chevron-left'></i></button>
+                            <button id="next-month-btn" class="icon-btn sm"><i class='bx bx-chevron-right'></i></button>
+                        </div>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <span>Mon</span>
+                        <span>Tue</span>
+                        <span>Wed</span>
+                        <span>Thu</span>
+                        <span>Fri</span>
+                        <span>Sat</span>
+                        <span>Sun</span>
+                    </div>
+                    <div id="calendar-grid" class="calendar-grid">
+                        <!-- Days injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Input Form -->
+                <form id="add-todo-form" class="task-input-form">
+                    <input type="text" id="todo-input" placeholder="Plan your day, Sarah..." required autocomplete="off">
+                    <button type="button" id="ai-suggest-btn" class="ai-btn" aria-label="AI Suggestion" title="Get AI Suggestion">
+                        <i class='bx bx-magic-wand'></i>
+                    </button>
+                </form>
+
+                <!-- Agenda Section -->
+                <section class="agenda-section">
+                    <h3 class="section-title">TODAY'S AGENDA</h3>
+                    <div class="todo-list-container">
+                        <ul id="todo-list" class="todo-list">
+                            <!-- Todos injected via JS -->
+                        </ul>
+                    </div>
+                </section>
             </div>
         </main>
-        
-        <footer>
-            <p>Powered by Supabase</p>
-        </footer>
     </div>
 
-    <!-- Configuration Modal -->
+    <!-- Configuration Modal (Hidden by default, used for Supabase & Groq API) -->
+    <button id="open-config-btn" class="config-toggle-btn" aria-label="Settings">
+        <i class='bx bx-cog'></i>
+    </button>
+
     <div id="config-modal" class="modal">
-        <div class="modal-content glass-panel">
-            <h2>App Configuration</h2>
-            <p>Enter your credentials to enable cloud sync and AI features. Leave blank to use local storage.</p>
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <p>Configure your Supabase and Groq API keys here.</p>
             <div class="input-group">
-                <label for="supabase-url">Supabase Project URL</label>
+                <label for="supabase-url">Supabase URL</label>
                 <input type="text" id="supabase-url" placeholder="https://xyzcompany.supabase.co">
             </div>
             <div class="input-group">
                 <label for="supabase-key">Supabase Anon Key</label>
-                <input type="password" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                <input type="password" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5c...">
             </div>
             <div class="input-group">
-                <label for="groq-key">Groq API Key (Optional for AI)</label>
+                <label for="groq-key">Groq API Key (AI)</label>
                 <input type="password" id="groq-key" placeholder="gsk_...">
             </div>
             <div class="modal-actions">
-                <button id="close-modal-btn" class="secondary-btn">Use Local Storage</button>
-                <button id="save-config-btn" class="primary-btn">Save Configuration</button>
+                <button id="close-modal-btn" class="secondary-btn">Cancel</button>
+                <button id="save-config-btn" class="primary-btn">Save</button>
             </div>
         </div>
     </div>
-    <button id="open-config-btn" class="config-toggle-btn" aria-label="Configure Supabase">
-        <i class='bx bx-cog'></i>
-    </button>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
 </html>

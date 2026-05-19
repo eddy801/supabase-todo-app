@@ -103,10 +103,14 @@ function renderCalendar() {
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
     
-    const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
-    calendarMonthDisplay.textContent = `${year}년 ${monthNames[month]}`;
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    calendarMonthDisplay.textContent = `${monthNames[month]} ${year}`;
 
-    const firstDay = new Date(year, month, 1).getDay();
+    // Get day of week for 1st of month (0 = Sun, 1 = Mon... 6 = Sat)
+    let firstDay = new Date(year, month, 1).getDay();
+    // Convert to Monday-start (0 = Mon, 6 = Sun)
+    firstDay = firstDay === 0 ? 6 : firstDay - 1;
+    
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
     
@@ -369,9 +373,12 @@ function renderTodos() {
         
         li.innerHTML = `
             <input type="checkbox" class="todo-checkbox" ${todo.is_completed ? 'checked' : ''} data-id="${todo.id}">
-            <span class="todo-text">${escapeHTML(todo.task)}</span>
+            <div class="todo-content">
+                <span class="todo-text">${escapeHTML(todo.task)}</span>
+                <span class="todo-meta">Added today</span>
+            </div>
             <button class="delete-btn" data-id="${todo.id}" aria-label="Delete Task">
-                <i class='bx bx-trash'></i>
+                <i class='bx bx-x'></i>
             </button>
         `;
 
