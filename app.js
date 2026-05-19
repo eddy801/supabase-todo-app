@@ -189,7 +189,7 @@ async function handleAddTodo(e) {
     await addTodoInternal(task);
 }
 
-async function addTodoInternal(task) {
+async function addTodoInternal(task, parentId = null) {
     const dateStr = getFormattedDateString();
 
     const newTodo = {
@@ -197,6 +197,7 @@ async function addTodoInternal(task) {
         task: task,
         is_completed: false,
         date: dateStr,
+        parent_id: parentId,
         created_at: new Date().toISOString()
     };
 
@@ -221,6 +222,7 @@ async function addTodoInternal(task) {
     } else {
         saveLocalTodos(dateStr);
     }
+    return newTodo;
 }
 
 // Groq AI Integration
@@ -249,12 +251,18 @@ async function suggestTaskBreakdownWithAI() {
             },
             body: JSON.stringify({
                 model: 'llama-3.1-8b-instant',
-                messages: [{
-                    role: 'user',
-                    content: `사용자가 '${taskText}' 라는 목표를 달성하려고 합니다. 이 목표를 달성하기 위해 당장 실행할 수 있는 매우 현실적이고, 구체적이며, 실질적인 하위 액션 플랜 3~5가지를 제안해주세요. (예: '100억 벌기' -> '수입/지출 내역 분석하기, 부업을 위한 스킬셋 정리하기, 매달 50만원 저축 자동이체 설정하기'). 모호한 말은 빼고, 행동 중심적인 하위 할 일만 쉼표(,)로 구분해서 한국어로 출력하세요.`
-                }],
-                temperature: 0.7,
-                max_tokens: 150
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a strict JSON outputting machine. You must ONLY return a valid JSON array of strings representing the subtasks. Do NOT wrap the JSON in markdown blocks (e.g. ```json). Do NOT add any conversational text or greetings. Example format: ["Task 1", "Task 2", "Task 3"]'
+                    },
+                    {
+                        role: 'user',
+                        content: `사용자가 '${taskText}' 라는 목표를 달성하려고 합니다. 이 목표를 달성하기 위해 당장 실행할 수 있는 매우 현실적이고, 구체적이며, 실질적인 하위 액션 플랜 3~5가지를 제안해주세요. 결과는 오직 JSON 문자열 배열 포맷으로만 응답하세요.`
+                    }
+                ],
+                temperature: 0.2,
+                max_tokens: 250
             })
         });
 
@@ -265,17 +273,37 @@ async function suggestTaskBreakdownWithAI() {
         const data = await response.json();
         const suggestionStr = data.choices[0].message.content.trim();
         
-        const subTasks = suggestionStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        let subTasks = [];
+        try {
+            let cleanStr = suggestionStr;
+            if (cleanStr.startsWith('```json')) {
+                cleanStr = cleanStr.replace(/```json/g, '').replace(/```/g, '').trim();
+            } else if (cleanStr.startsWith('```')) {
+                cleanStr = cleanStr.replace(/```/g, '').trim();
+            }
+            subTasks = JSON.parse(cleanStr);
+            if (!Array.isArray(subTasks)) throw new Error("Not an array");
+        } catch (e) {
+            console.error("JSON parsing failed, trying fallback regex", e);
+            const match = suggestionStr.match(/\[(.*?)\]/s);
+            if (match) {
+                try {
+                    subTasks = JSON.parse(match[0]);
+                } catch (err) {
+                    console.error("Fallback parsing failed");
+                }
+            }
+        }
         
         if (subTasks.length > 0) {
             todoInput.value = '';
             
             // 상위 목표(최종) 추가
-            await addTodoInternal(`[최종] ${taskText}`);
+            const parentTodo = await addTodoInternal(`[최종] ${taskText}`);
             
             // 하위 할 일 추가
             for (const subTask of subTasks) {
-                await addTodoInternal(subTask);
+                await addTodoInternal(subTask, parentTodo.id);
             }
         } else {
             alert("AI가 적절한 하위 할 일을 만들지 못했습니다. 다시 시도해주세요.");
@@ -367,19 +395,43 @@ function renderTodos() {
         return;
     }
 
-    todos.forEach(todo => {
+    const mainTodos = todos.filter(t => !t.parent_id);
+
+    mainTodos.forEach(todo => {
+        const children = todos.filter(t => t.parent_id === todo.id);
+        
         const li = document.createElement('li');
-        li.className = `todo-item ${todo.is_completed ? 'completed' : ''}`;
+        li.className = `todo-group ${todo.is_completed ? 'completed' : ''}`;
+        
+        let childrenHTML = '';
+        if (children.length > 0) {
+            childrenHTML = `
+                <div class="sub-todos-container">
+                    ${children.map(child => `
+                        <div class="sub-todo-item ${child.is_completed ? 'completed' : ''}">
+                            <input type="checkbox" class="todo-checkbox sm" ${child.is_completed ? 'checked' : ''} data-id="${child.id}">
+                            <div class="todo-content">
+                                <span class="todo-text">${escapeHTML(child.task)}</span>
+                            </div>
+                            <button class="delete-btn sm" data-id="${child.id}" aria-label="Delete Task"><i class='bx bx-x'></i></button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
         
         li.innerHTML = `
-            <input type="checkbox" class="todo-checkbox" ${todo.is_completed ? 'checked' : ''} data-id="${todo.id}">
-            <div class="todo-content">
-                <span class="todo-text">${escapeHTML(todo.task)}</span>
-                <span class="todo-meta">Added today</span>
+            <div class="todo-item ${children.length > 0 ? 'has-children' : ''}">
+                <input type="checkbox" class="todo-checkbox" ${todo.is_completed ? 'checked' : ''} data-id="${todo.id}">
+                <div class="todo-content">
+                    <span class="todo-text">${escapeHTML(todo.task)}</span>
+                    <span class="todo-meta">Added today</span>
+                </div>
+                <button class="delete-btn" data-id="${todo.id}" aria-label="Delete Task">
+                    <i class='bx bx-x'></i>
+                </button>
             </div>
-            <button class="delete-btn" data-id="${todo.id}" aria-label="Delete Task">
-                <i class='bx bx-x'></i>
-            </button>
+            ${childrenHTML}
         `;
 
         todoList.appendChild(li);
