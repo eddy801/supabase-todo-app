@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tasks</title>
+    <meta name="description" content="A beautiful date-based to-do list application powered by Supabase.">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Boxicons for icons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header: Date Selector -->
+        <header class="date-selector">
+            <button id="prev-date-btn" class="icon-btn" aria-label="Previous Day">
+                <i class='bx bx-chevron-left'></i>
+            </button>
+            <div class="date-display">
+                <h1 id="current-date-display">Today</h1>
+                <span id="current-date-full">October 24, 2023</span>
+            </div>
+            <button id="next-date-btn" class="icon-btn" aria-label="Next Day">
+                <i class='bx bx-chevron-right'></i>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Add Todo Form -->
+            <form id="add-todo-form" class="add-todo-form">
+                <input type="text" id="todo-input" placeholder="What needs to be done?" required autocomplete="off">
+                <button type="submit" class="primary-btn">
+                    <i class='bx bx-plus'></i>
+                </button>
+            </form>
+
+            <!-- Todo List -->
+            <div class="todo-list-container">
+                <ul id="todo-list" class="todo-list">
+                    <!-- Todos will be injected here via JS -->
+                    <div class="empty-state">
+                        <i class='bx bx-list-check'></i>
+                        <p>No tasks for this day. Enjoy your free time!</p>
+                    </div>
+                </ul>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Powered by Supabase</p>
+        </footer>
+    </div>
+
+    <!-- Configuration Modal (For Supabase Credentials) -->
+    <div id="config-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <h2>Supabase Configuration</h2>
+            <p>Enter your Supabase credentials to enable cloud sync. Leave blank to use local storage.</p>
+            <div class="input-group">
+                <label for="supabase-url">Project URL</label>
+                <input type="text" id="supabase-url" placeholder="https://xyzcompany.supabase.co">
+            </div>
+            <div class="input-group">
+                <label for="supabase-key">Anon Key</label>
+                <input type="password" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+            </div>
+            <div class="modal-actions">
+                <button id="close-modal-btn" class="secondary-btn">Use Local Storage</button>
+                <button id="save-config-btn" class="primary-btn">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+    <button id="open-config-btn" class="config-toggle-btn" aria-label="Configure Supabase">
+        <i class='bx bx-cog'></i>
+    </button>
+
+    <script src="app.js"></script>
+</body>
+</html>
